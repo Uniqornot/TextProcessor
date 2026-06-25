@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>TextProcessor</RootNamespace>
+    <AssemblyName>TextProcessor</AssemblyName>
+    <ApplicationTitle>Обработчик текста</ApplicationTitle>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsPackageType>MSIX</WindowsPackageType>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <AppxPackageSigningEnabled Condition="Exists('TextProcessor_Dev.pfx')">true</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled Condition="!Exists('TextProcessor_Dev.pfx')">false</AppxPackageSigningEnabled>
+    <PackageCertificateKeyFile Condition="Exists('TextProcessor_Dev.pfx')">TextProcessor_Dev.pfx</PackageCertificateKeyFile>
+    <PackageCertificatePassword Condition="Exists('TextProcessor_Dev.pfx')">dev</PackageCertificatePassword>
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <!-- Исключить obj/bin вложенных папок (тестовые проекты и т.п.) -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/obj/**;**/bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

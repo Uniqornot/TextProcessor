@@ -1,0 +1,260 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:TextProcessor">
+
+    <!-- Цветовая палитра -->
+    <Color x:Key="BackgroundGrayColor">#F8F9FA</Color>
+    <Color x:Key="CardWhiteColor">#FFFFFF</Color>
+    <Color x:Key="BorderGrayColor">#E9ECEF</Color>
+    <Color x:Key="TextPrimaryColor">#212529</Color>
+    <Color x:Key="TextSecondaryColor">#6C757D</Color>
+    <Color x:Key="AccentBlueColor">#4263EB</Color>
+
+    <SolidColorBrush x:Key="BackgroundGrayBrush" Color="{StaticResource BackgroundGrayColor}"/>
+    <SolidColorBrush x:Key="CardWhiteBrush" Color="{StaticResource CardWhiteColor}"/>
+    <SolidColorBrush x:Key="BorderGrayBrush" Color="{StaticResource BorderGrayColor}"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlueColor}"/>
+
+    <!-- Строки интерфейса -->
+    <sys:String x:Key="AppTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Обработчик текста</sys:String>
+    <sys:String x:Key="AppSubtitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Очистите и отформатируйте ваш текст с помощью мощных инструментов обработки</sys:String>
+    <sys:String x:Key="LanguageLabel" xmlns:sys="clr-namespace:System;assembly=mscorlib">RU</sys:String>
+
+    <sys:String x:Key="SourceTextTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Исходный текст</sys:String>
+    <sys:String x:Key="ProcessedTextTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Обработанный текст</sys:String>
+    <sys:String x:Key="ToolsTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Инструменты обработки</sys:String>
+    <sys:String x:Key="FeaturesTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Возможности обработки</sys:String>
+
+    <sys:String x:Key="PasteButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">📋 Вставить</sys:String>
+    <sys:String x:Key="CopyButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">📋 Копировать</sys:String>
+    <sys:String x:Key="ClearButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">🗑 Очистить</sys:String>
+
+    <sys:String x:Key="InputPlaceholder" xmlns:sys="clr-namespace:System;assembly=mscorlib">Вставьте ваш текст сюда для очистки и обработки...</sys:String>
+    <sys:String x:Key="OutputEmptyText" xmlns:sys="clr-namespace:System;assembly=mscorlib">Обработанный текст появится здесь</sys:String>
+
+    <sys:String x:Key="StatCharacters" xmlns:sys="clr-namespace:System;assembly=mscorlib">Символов:</sys:String>
+    <sys:String x:Key="StatWords" xmlns:sys="clr-namespace:System;assembly=mscorlib">Слов:</sys:String>
+    <sys:String x:Key="StatLines" xmlns:sys="clr-namespace:System;assembly=mscorlib">Строк:</sys:String>
+    <sys:String x:Key="StatParagraphs" xmlns:sys="clr-namespace:System;assembly=mscorlib">Абзацев:</sys:String>
+
+    <sys:String x:Key="FullCleanButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">✨ Полная очистка</sys:String>
+    <sys:String x:Key="RemoveSpacesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">✂️ Убрать пробелы</sys:String>
+    <sys:String x:Key="SingleLineButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">📄 Одна строка</sys:String>
+    <sys:String x:Key="FixParagraphsButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">¶ Исправить абзацы</sys:String>
+    <sys:String x:Key="SmartNormalizeButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Нормализация ( - → — )</sys:String>
+    <sys:String x:Key="DeNormalizeDashesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Нормализация ( — → - )</sys:String>
+    <sys:String x:Key="DenormalizeQuotesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Кавычки → прямые ""</sys:String>
+    <sys:String x:Key="RemoveHiddenButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">🛡 Удаление скрытых символов</sys:String>
+    <sys:String x:Key="ManageLineBreaksButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">↵ Управление переносами</sys:String>
+
+    <sys:String x:Key="FeatureHiddenTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Удаление скрытых символов</sys:String>
+    <sys:String x:Key="FeatureHiddenDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Очистка от невидимых Unicode-символов и ИИ-разметки</sys:String>
+    <sys:String x:Key="FeatureNormalizeTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Умная нормализация</sys:String>
+    <sys:String x:Key="FeatureNormalizeDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Кавычки, тире и многоточия в типографском стиле</sys:String>
+    <sys:String x:Key="FeatureWordsTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Точный подсчёт слов</sys:String>
+    <sys:String x:Key="FeatureWordsDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Поддержка кириллицы и составных слов через дефис</sys:String>
+    <sys:String x:Key="FeatureSpacesTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Контроль пробелов</sys:String>
+    <sys:String x:Key="FeatureSpacesDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Удаление лишних пробелов и табуляций в строках</sys:String>
+    <sys:String x:Key="FeatureBreaksTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Управление переносами</sys:String>
+    <sys:String x:Key="FeatureBreaksDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Нормализация абзацев и пустых строк</sys:String>
+    <sys:String x:Key="FeatureBatchTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Пакетная обработка</sys:String>
+    <sys:String x:Key="FeatureBatchDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Мгновенное применение любого инструмента к тексту</sys:String>
+
+  <!-- Базовая карточка -->
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CardWhiteBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+    </Style>
+
+    <!-- Заголовок секции -->
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Основная кнопка (синяя) -->
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="10"
+                            Padding="16,0">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#3451C7"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2D47B0"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Вторичная кнопка (белая с рамкой) -->
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource CardWhiteBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource BackgroundGrayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#E9ECEF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- TextButton (без фона, как ссылка) -->
+    <Style x:Key="TextButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="AccentTextButtonStyle" TargetType="Button" BasedOn="{StaticResource TextButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource AccentBlueBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="SecondaryTextButtonStyle" TargetType="Button" BasedOn="{StaticResource TextButtonStyle}">
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+    </Style>
+
+    <!-- Текстовое поле ввода -->
+    <Style x:Key="InputTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{StaticResource CardWhiteBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="AcceptsReturn" Value="True"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="MinHeight" Value="200"/>
+        <Setter Property="IsUndoEnabled" Value="True"/>
+        <Setter Property="UndoLimit" Value="100"/>
+    </Style>
+
+    <!-- Текстовое поле вывода (только чтение) -->
+    <Style x:Key="OutputTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundGrayBrush}"/>
+    </Style>
+
+    <!-- Placeholder для TextBox -->
+    <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
+        <Setter Property="local:TextBoxPlaceholder.Placeholder" Value="{StaticResource InputPlaceholder}"/>
+    </Style>
+
+    <!-- Строка статистики -->
+    <Style x:Key="StatLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="StatValueStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="4,0,16,0"/>
+    </Style>
+
+    <!-- Строка фичи -->
+    <Style x:Key="FeatureRowStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BackgroundGrayBrush}"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <!-- Кнопка сворачивания секции -->
+    <Style x:Key="ExpandToggleStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

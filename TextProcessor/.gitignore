@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+dist/
+TextProcessor.Installer/publish/
+TextProcessor.Installer/bin/
+TextProcessor.Installer/obj/
+TextProcessor.Installer/AppHarvest.wxs
+TextProcessor_Dev.pfx

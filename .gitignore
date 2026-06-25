@@ -1,0 +1,10 @@
+dist/
+TextProcessor/bin/
+TextProcessor/obj/
+TextProcessor.Installer/publish/
+TextProcessor.Installer/publish-*/
+TextProcessor.Installer/pub*/
+TextProcessor.Installer/bin/
+TextProcessor.Installer/obj/
+_t/
+_val/
