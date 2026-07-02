@@ -200,8 +200,9 @@
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="MinHeight" Value="200"/>
-        <Setter Property="IsUndoEnabled" Value="True"/>
-        <Setter Property="UndoLimit" Value="100"/>
+        <Setter Property="MaxHeight" Value="460"/>
+        <Setter Property="IsUndoEnabled" Value="False"/>
+        <Setter Property="UndoLimit" Value="0"/>
     </Style>
 
     <!-- Текстовое поле вывода (только чтение) -->

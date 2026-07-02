@@ -6,5 +6,7 @@ TextProcessor.Installer/publish-*/
 TextProcessor.Installer/pub*/
 TextProcessor.Installer/bin/
 TextProcessor.Installer/obj/
+TextProcessor.Tests/bin/
+TextProcessor.Tests/obj/
 _t/
 _val/

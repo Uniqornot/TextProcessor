@@ -1,5 +1,7 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,6 +43,15 @@ public partial class MainViewModel : ObservableObject
 
     public bool HasOutput => !string.IsNullOrEmpty(OutputText);
 
+    // Порог, выше которого перенос слов отключается ради скорости раскладки WPF TextBox.
+    private const int WrapThreshold = 15000;
+
+    public TextWrapping InputWrapping =>
+        InputText.Length > WrapThreshold ? TextWrapping.NoWrap : TextWrapping.Wrap;
+
+    public TextWrapping OutputWrapping =>
+        OutputText.Length > WrapThreshold ? TextWrapping.NoWrap : TextWrapping.Wrap;
+
     [RelayCommand]
     private void FullClean() =>
         OutputText = TextProcessingService.FullClean(InputText);
@@ -78,38 +89,96 @@ public partial class MainViewModel : ObservableObject
         OutputText = TextProcessingService.FixParagraphs(InputText);
 
     [RelayCommand]
-    private void PasteInput()
+    private async Task PasteInput()
     {
-        if (TryGetClipboardText(out var text))
-            InputText = text;
+        var result = await RunOnStaThreadAsync(TryGetClipboardText);
+        if (result.Success && !string.IsNullOrEmpty(result.Text))
+            InputText = result.Text;
     }
 
     [RelayCommand]
-    private void CopyOutput()
+    private async Task CopyOutput()
     {
-        if (HasOutput)
-            TrySetClipboardText(OutputText);
+        if (!HasOutput)
+            return;
+
+        var value = OutputText;
+        var ok = await RunOnStaThreadAsync(() => TrySetClipboardText(value));
+        if (!ok)
+        {
+            MessageBox.Show(
+                "Не удалось скопировать текст: буфер обмена сейчас занят другой программой " +
+                "(например, менеджером буфера обмена). Попробуйте нажать «Копировать» ещё раз.",
+                "Обработчик текста",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
-    private static bool TryGetClipboardText(out string text)
+    /// <summary>
+    /// Выполняет работу с буфером обмена в фоновом потоке, чтобы UI не зависал.
+    /// </summary>
+    private static Task<T> RunOnStaThreadAsync<T>(Func<T> action)
     {
-        text = string.Empty;
-        for (var attempt = 0; attempt < 5; attempt++)
+        var tcs = new TaskCompletionSource<T>();
+        var thread = new Thread(() =>
         {
-            try
-            {
-                if (Clipboard.ContainsText())
-                    text = Clipboard.GetText();
+            try { tcs.SetResult(action()); }
+            catch (Exception) { tcs.SetResult(default!); }
+        })
+        {
+            IsBackground = true
+        };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return tcs.Task;
+    }
+
+    // Работа с буфером обмена напрямую через Win32 API: повтор идёт именно на
+    // захвате буфера (OpenClipboard), поэтому это надёжнее OLE-обёртки WPF,
+    // когда буфер удерживает другой процесс (менеджер буфера обмена).
+    private const uint CfUnicodeText = 13;
+    private const uint GmemMoveable = 0x0002;
+    private const int ClipboardOpenAttempts = 50;
+    private const int ClipboardOpenDelayMs = 40;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool CloseClipboard();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool EmptyClipboard();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr GetClipboardData(uint uFormat);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool IsClipboardFormatAvailable(uint format);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GlobalLock(IntPtr hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GlobalUnlock(IntPtr hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GlobalFree(IntPtr hMem);
+
+    private static bool TryOpenClipboard()
+    {
+        for (var attempt = 0; attempt < ClipboardOpenAttempts; attempt++)
+        {
+            if (OpenClipboard(IntPtr.Zero))
                 return true;
-            }
-            catch (Exception) when (attempt < 4)
-            {
-                Thread.Sleep(50);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            Thread.Sleep(ClipboardOpenDelayMs);
         }
 
         return false;
@@ -117,24 +186,84 @@ public partial class MainViewModel : ObservableObject
 
     private static bool TrySetClipboardText(string value)
     {
-        for (var attempt = 0; attempt < 5; attempt++)
+        value ??= string.Empty;
+
+        if (!TryOpenClipboard())
+            return false;
+
+        try
         {
-            try
+            if (!EmptyClipboard())
+                return false;
+
+            var bytes = (UIntPtr)((value.Length + 1) * 2);
+            var hGlobal = GlobalAlloc(GmemMoveable, bytes);
+            if (hGlobal == IntPtr.Zero)
+                return false;
+
+            var target = GlobalLock(hGlobal);
+            if (target == IntPtr.Zero)
             {
-                Clipboard.SetDataObject(value, true);
-                return true;
-            }
-            catch (Exception) when (attempt < 4)
-            {
-                Thread.Sleep(50);
-            }
-            catch (Exception)
-            {
+                GlobalFree(hGlobal);
                 return false;
             }
-        }
 
-        return false;
+            try
+            {
+                if (value.Length > 0)
+                    Marshal.Copy(value.ToCharArray(), 0, target, value.Length);
+                Marshal.WriteInt16(target, value.Length * 2, 0); // завершающий null
+            }
+            finally
+            {
+                GlobalUnlock(hGlobal);
+            }
+
+            if (SetClipboardData(CfUnicodeText, hGlobal) == IntPtr.Zero)
+            {
+                GlobalFree(hGlobal); // система не приняла память — освобождаем сами
+                return false;
+            }
+
+            return true; // при успехе памятью владеет система
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+    }
+
+    private static (bool Success, string Text) TryGetClipboardText()
+    {
+        if (!IsClipboardFormatAvailable(CfUnicodeText))
+            return (true, string.Empty); // в буфере нет текста — это не ошибка
+
+        if (!TryOpenClipboard())
+            return (false, string.Empty);
+
+        try
+        {
+            var handle = GetClipboardData(CfUnicodeText);
+            if (handle == IntPtr.Zero)
+                return (true, string.Empty);
+
+            var ptr = GlobalLock(handle);
+            if (ptr == IntPtr.Zero)
+                return (true, string.Empty);
+
+            try
+            {
+                return (true, Marshal.PtrToStringUni(ptr) ?? string.Empty);
+            }
+            finally
+            {
+                GlobalUnlock(handle);
+            }
+        }
+        finally
+        {
+            CloseClipboard();
+        }
     }
 
     [RelayCommand]
@@ -154,6 +283,7 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(WordCount));
         OnPropertyChanged(nameof(LineCount));
         OnPropertyChanged(nameof(ParagraphCount));
+        OnPropertyChanged(nameof(InputWrapping));
     }
 
     partial void OnOutputTextChanged(string value)
@@ -163,5 +293,6 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(OutputWordCount));
         OnPropertyChanged(nameof(OutputLineCount));
         OnPropertyChanged(nameof(OutputParagraphCount));
+        OnPropertyChanged(nameof(OutputWrapping));
     }
 }

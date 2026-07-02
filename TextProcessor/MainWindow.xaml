@@ -98,6 +98,8 @@
 
                             <TextBox Grid.Row="1"
                                      Style="{StaticResource PlaceholderTextBoxStyle}"
+                                     TextWrapping="{Binding InputWrapping}"
+                                     HorizontalScrollBarVisibility="Auto"
                                      Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"/>
 
                             <WrapPanel Grid.Row="2" Margin="0,12,0,0">
@@ -194,6 +196,8 @@
 
                             <Grid Grid.Row="1" MinHeight="200">
                                 <TextBox Style="{StaticResource OutputTextBoxStyle}"
+                                         TextWrapping="{Binding OutputWrapping}"
+                                         HorizontalScrollBarVisibility="Auto"
                                          Text="{Binding OutputText, UpdateSourceTrigger=PropertyChanged}"/>
 
                                 <!-- Пустое состояние -->

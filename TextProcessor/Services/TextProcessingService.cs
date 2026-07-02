@@ -132,7 +132,7 @@ public static class TextProcessingService
     public static string RemoveHiddenChars(string input)
     {
         if (string.IsNullOrEmpty(input))
-            return input;
+            return string.Empty;
 
         var result = input;
 
@@ -151,8 +151,8 @@ public static class TextProcessingService
         // 2. Горизонтальные разделители Markdown (---, ***, ___)
         result = Regex.Replace(result, @"(?m)^\s*[-*_]{3,}\s*$", string.Empty);
 
-        // 3. Заголовки Markdown (# ## ### ...)
-        result = Regex.Replace(result, @"(?m)^#{1,6}\s+", string.Empty);
+        // 3. Заголовки Markdown (# ## ### ...), в т.ч. с ведущими пробелами
+        result = Regex.Replace(result, @"(?m)^\s*#{1,6}\s+", string.Empty);
 
         // 4. Нумерованные списки (1. или 1) в начале строки)
         result = Regex.Replace(result, @"(?m)^\s*\d+[.)]\s+", string.Empty);
