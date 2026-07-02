@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -78,15 +80,61 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void PasteInput()
     {
-        if (Clipboard.ContainsText())
-            InputText = Clipboard.GetText();
+        if (TryGetClipboardText(out var text))
+            InputText = text;
     }
 
     [RelayCommand]
     private void CopyOutput()
     {
         if (HasOutput)
-            Clipboard.SetText(OutputText);
+            TrySetClipboardText(OutputText);
+    }
+
+    private static bool TryGetClipboardText(out string text)
+    {
+        text = string.Empty;
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                if (Clipboard.ContainsText())
+                    text = Clipboard.GetText();
+                return true;
+            }
+            catch (Exception) when (attempt < 4)
+            {
+                Thread.Sleep(50);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TrySetClipboardText(string value)
+    {
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            try
+            {
+                Clipboard.SetDataObject(value, true);
+                return true;
+            }
+            catch (Exception) when (attempt < 4)
+            {
+                Thread.Sleep(50);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     [RelayCommand]
