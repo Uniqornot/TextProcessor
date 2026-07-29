@@ -50,6 +50,10 @@ public static class TextProcessingService
         @"(?m)^#{1,6}\s+",
         RegexOptions.Compiled);
 
+    private static readonly Regex MarkdownBlockquoteRegex = new(
+        @"(?m)^[ \t]*>[ \t]+",
+        RegexOptions.Compiled);
+
     private static readonly Regex MarkdownBoldRegex = new(
         @"\*\*(.+?)\*\*",
         RegexOptions.Singleline | RegexOptions.Compiled);
@@ -87,11 +91,11 @@ public static class TextProcessingService
         RegexOptions.Compiled);
 
     private static readonly Regex DashWithSpacesRegex = new(
-        @"\s*[\u2013\u2014]\s*",
+        @"[ \t]*[\u2013\u2014][ \t]*",
         RegexOptions.Compiled);
 
     private static readonly Regex MultiHyphenRegex = new(
-        @"\s*-{2,}\s*",
+        @"[ \t]*-{2,}[ \t]*",
         RegexOptions.Compiled);
 
     private static readonly Regex SpacedHyphenRegex = new(
@@ -100,10 +104,6 @@ public static class TextProcessingService
 
     private static readonly Regex SpacedEmDashRegex = new(
         @"\s—\s",
-        RegexOptions.Compiled);
-
-    private static readonly Regex StraightQuotesRegex = new(
-        @"""([^""]+)""",
         RegexOptions.Compiled);
 
     /// <summary>
@@ -154,31 +154,34 @@ public static class TextProcessingService
         // 3. Заголовки Markdown (# ## ### ...), в т.ч. с ведущими пробелами
         result = Regex.Replace(result, @"(?m)^\s*#{1,6}\s+", string.Empty);
 
-        // 4. Нумерованные списки (1. или 1) в начале строки)
+        // 4. Цитаты Markdown (> текст)
+        result = MarkdownBlockquoteRegex.Replace(result, string.Empty);
+
+        // 5. Нумерованные списки (1. или 1) в начале строки)
         result = Regex.Replace(result, @"(?m)^\s*\d+[.)]\s+", string.Empty);
 
-        // 5. Маркеры списков (- * • ...)
+        // 6. Маркеры списков (- * • ...)
         result = Regex.Replace(result, @"(?m)^\s*[-*•▪◦‣]\s+", string.Empty);
 
-        // 6. Жирный: **text** и __text__
+        // 7. Жирный: **text** и __text__
         result = Regex.Replace(result, @"\*\*(.+?)\*\*", "$1", RegexOptions.Singleline);
         result = Regex.Replace(result, @"__(.+?)__", "$1", RegexOptions.Singleline);
 
-        // 7. Курсив: *text* и _text_
+        // 8. Курсив: *text* и _text_
         result = Regex.Replace(result, @"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", "$1", RegexOptions.Singleline);
         result = Regex.Replace(result, @"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", "$1", RegexOptions.Singleline);
 
-        // 8. Escape-слэши Markdown (\* \_ \- ...)
+        // 9. Escape-слэши Markdown (\* \_ \- ...)
         result = Regex.Replace(result, @"\\([*_\-.!#\[\]()`>+])", "$1");
 
-        // 9. ИИ-паттерн «Метка: текст» в начале строки (только буквы в метке, без цифр)
+        // 10. ИИ-паттерн «Метка: текст» в начале строки (только буквы в метке, без цифр)
         result = Regex.Replace(result, @"(?m)^([\p{L}][\p{L}\s]{0,40}):\s+(?=\S)", "$1 - ");
 
-        // 10. Удаление эмодзи
+        // 11. Удаление эмодзи
         result = Regex.Replace(result, @"[\u2700-\u27BF\u2600-\u26FF\u2300-\u23FF\u2B00-\u2BFF\uFE0F]", string.Empty);
         result = Regex.Replace(result, @"[\uD83C-\uDBFF][\uDC00-\uDFFF]", string.Empty);
 
-        // 11. Нормализация пробелов после удалений
+        // 12. Нормализация пробелов после удалений
         result = string.Join("\n",
             result.Split('\n')
                 .Select(line => Regex.Replace(line, @"[ \t]{2,}", " ").TrimEnd()));
@@ -243,7 +246,8 @@ public static class TextProcessingService
     }
 
     /// <summary>
-    /// Умная нормализация кавычек, тире и многоточий.
+    /// Умная нормализация как в AndroidTextCleaner:
+    /// типографские кавычки и тире → обычные символы, многоточие → один знак.
     /// </summary>
     public static string SmartNormalize(string input)
     {
@@ -252,15 +256,13 @@ public static class TextProcessingService
 
         var result = input;
 
-        result = StraightQuotesRegex.Replace(result, "«$1»");
+        result = DenormalizeQuotes(result);
         result = EllipsisRegex.Replace(result, "…");
 
-        // Нормализация тире (4 шага, без повторного срабатывания)
-        result = DashGluedRegex.Replace(result, "$1 — $3");
-        result = DashWithSpacesRegex.Replace(result, " — ");
-        result = MultiHyphenRegex.Replace(result, " — ");
-        result = SpacedHyphenRegex.Replace(result, "—");
-        result = SpacedEmDashRegex.Replace(result, " — ");
+        // Преобразуем тире, не захватывая \r/\n и не склеивая строки.
+        result = DashWithSpacesRegex.Replace(result, " - ");
+        result = MultiHyphenRegex.Replace(result, " - ");
+        result = MultipleSpacesRegex.Replace(result, " ");
 
         result = result.Replace('`', '\'').Replace('´', '\'');
 
@@ -276,21 +278,24 @@ public static class TextProcessingService
             return string.Empty;
 
         var result = input;
-        result = result.Replace('«', '"');
-        result = result.Replace('»', '"');
+        // Основные двойные типографские кавычки: русские «ёлочки»,
+        // английские “лапки”, немецкие „лапки“ и одинарные угловые.
+        foreach (var quote in new[] { '«', '»', '\u201C', '\u201D', '\u201E', '\u201F', '‹', '›', '〝', '〞', '＂' })
+            result = result.Replace(quote, '"');
+
         result = result.Replace('\u2018', '\'');
         result = result.Replace('\u2019', '\'');
-        result = result.Replace('\u201C', '"');
-        result = result.Replace('\u201D', '"');
+        result = result.Replace('\u201A', '\'');
+        result = result.Replace('\u201B', '\'');
         return result;
     }
 
     private static readonly Regex EmDashSpacesRegex = new(
-        @"\s*\u2014\s*",
+        @"[ \t]*\u2014[ \t]*",
         RegexOptions.Compiled);
 
     private static readonly Regex EnDashSpacesRegex = new(
-        @"\s*\u2013\s*",
+        @"[ \t]*\u2013[ \t]*",
         RegexOptions.Compiled);
 
     /// <summary>
@@ -314,7 +319,8 @@ public static class TextProcessingService
     }
 
     /// <summary>
-    /// Полная очистка: скрытые символы, Markdown и нормализация пробелов/абзацев.
+    /// Полная очистка с тем же конвейером, что и в AndroidTextCleaner:
+    /// скрытые символы/Markdown → абзацы → типографика → пробелы.
     /// </summary>
     public static string FullClean(string input)
     {
@@ -322,20 +328,15 @@ public static class TextProcessingService
             return string.Empty;
 
         var result = RemoveHiddenChars(input);
-        result = NormalizeLineEndings(result);
-
-        var processedLines = result.Split('\n')
-            .Select(line => MultipleSpacesRegex.Replace(line, " ").Trim());
-        result = string.Join('\n', processedLines);
-
-        result = ThreePlusNewlinesRegex.Replace(result, "\n\n");
-        return result.Trim();
+        result = FixParagraphs(result);
+        result = SmartNormalize(result);
+        return RemoveExtraSpaces(result);
     }
 
     /// <summary>
     /// Подсчёт символов.
     /// </summary>
-    public static int CountCharacters(string text) => text.Length;
+    public static int CountCharacters(string? text) => text?.Length ?? 0;
 
     /// <summary>
     /// Подсчёт слов (поддержка кириллицы через Unicode-категории).
@@ -361,7 +362,7 @@ public static class TextProcessingService
     public static int CountParagraphs(string text) =>
         string.IsNullOrWhiteSpace(text)
             ? 0
-            : ParagraphSplitRegex.Split(text.Trim())
+            : ParagraphSplitRegex.Split(NormalizeLineEndings(text).Trim())
                 .Count(p => !string.IsNullOrWhiteSpace(p));
 
     private static string NormalizeLineEndings(string text) =>
@@ -376,3 +377,4 @@ public static class TextProcessingService
         return string.Join('\n', lines);
     }
 }
+

@@ -145,6 +145,57 @@ public class TextProcessingServiceTests
         Assert.Contains('"', result);
     }
 
+    [Theory]
+    [InlineData("«текст»", "\"текст\"")]
+    [InlineData("„текст“", "\"текст\"")]
+    [InlineData("‟текст”", "\"текст\"")]
+    [InlineData("‹текст›", "\"текст\"")]
+    public void DenormalizeQuotes_ConvertsCommonTypography(string input, string expected)
+    {
+        Assert.Equal(expected, TextProcessingService.DenormalizeQuotes(input));
+    }
+
+    [Fact]
+    public void SmartNormalize_DashDoesNotRemoveLineBreaks()
+    {
+        var input = "первая строка\n—\nвторая строка";
+
+        Assert.Equal("первая строка\n - \nвторая строка",
+            TextProcessingService.SmartNormalize(input));
+    }
+
+    [Theory]
+    [InlineData("«текст»", "\"текст\"")]
+    [InlineData("“текст”", "\"текст\"")]
+    [InlineData("„текст“", "\"текст\"")]
+    public void SmartNormalize_UsesStraightQuotesLikeAndroid(string input, string expected)
+    {
+        Assert.Equal(expected, TextProcessingService.SmartNormalize(input));
+    }
+
+    [Fact]
+    public void FullClean_AppliesAndroidTypographyPipeline()
+    {
+        var input = "> **«Текст»** — пример...";
+
+        Assert.Equal("\"Текст\" - пример…", TextProcessingService.FullClean(input));
+    }
+
+    [Fact]
+    public void RemoveHiddenChars_RemovesMarkdownBlockquoteMarker()
+    {
+        Assert.Equal("цитата", TextProcessingService.RemoveHiddenChars("> цитата"));
+    }
+
+    [Fact]
+    public void DeNormalizeDashes_DoesNotRemoveLineBreaks()
+    {
+        var input = "первая строка\n—\nвторая строка";
+
+        Assert.Equal("первая строка\n - \nвторая строка",
+            TextProcessingService.DeNormalizeDashes(input));
+    }
+
     // ----- Подсчёт статистики -----
 
     [Fact]
@@ -164,6 +215,18 @@ public class TextProcessingServiceTests
     public void CountLines_EmptyIsOne()
     {
         Assert.Equal(1, TextProcessingService.CountLines(""));
+    }
+
+    [Fact]
+    public void CountCharacters_NullIsZero()
+    {
+        Assert.Equal(0, TextProcessingService.CountCharacters(null));
+    }
+
+    [Fact]
+    public void CountParagraphs_HandlesCarriageReturnLineEndings()
+    {
+        Assert.Equal(2, TextProcessingService.CountParagraphs("первый\r\rвторой"));
     }
 
     // ----- Устойчивость к большому и «сложному» вводу (без зависаний/исключений) -----
@@ -205,3 +268,4 @@ public class TextProcessingServiceTests
         Assert.Equal(once, twice);
     }
 }
+

@@ -43,16 +43,16 @@
     <sys:String x:Key="RemoveSpacesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">✂️ Убрать пробелы</sys:String>
     <sys:String x:Key="SingleLineButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">📄 Одна строка</sys:String>
     <sys:String x:Key="FixParagraphsButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">¶ Исправить абзацы</sys:String>
-    <sys:String x:Key="SmartNormalizeButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Нормализация ( - → — )</sys:String>
-    <sys:String x:Key="DeNormalizeDashesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Нормализация ( — → - )</sys:String>
-    <sys:String x:Key="DenormalizeQuotesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Кавычки → прямые ""</sys:String>
+    <sys:String x:Key="SmartNormalizeButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Умная нормализация</sys:String>
+    <sys:String x:Key="DeNormalizeDashesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Тире → дефис</sys:String>
+    <sys:String x:Key="DenormalizeQuotesButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">Кавычки → прямые</sys:String>
     <sys:String x:Key="RemoveHiddenButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">🛡 Удаление скрытых символов</sys:String>
     <sys:String x:Key="ManageLineBreaksButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">↵ Управление переносами</sys:String>
 
     <sys:String x:Key="FeatureHiddenTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Удаление скрытых символов</sys:String>
     <sys:String x:Key="FeatureHiddenDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Очистка от невидимых Unicode-символов и ИИ-разметки</sys:String>
     <sys:String x:Key="FeatureNormalizeTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Умная нормализация</sys:String>
-    <sys:String x:Key="FeatureNormalizeDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Кавычки, тире и многоточия в типографском стиле</sys:String>
+    <sys:String x:Key="FeatureNormalizeDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Единый вид кавычек, тире и многоточий как на Android</sys:String>
     <sys:String x:Key="FeatureWordsTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Точный подсчёт слов</sys:String>
     <sys:String x:Key="FeatureWordsDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Поддержка кириллицы и составных слов через дефис</sys:String>
     <sys:String x:Key="FeatureSpacesTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Контроль пробелов</sys:String>
@@ -259,3 +259,4 @@
     </Style>
 
 </ResourceDictionary>
+
