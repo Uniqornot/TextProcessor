@@ -50,9 +50,9 @@
     <sys:String x:Key="ManageLineBreaksButton" xmlns:sys="clr-namespace:System;assembly=mscorlib">↵ Управление переносами</sys:String>
 
     <sys:String x:Key="FeatureHiddenTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Удаление скрытых символов</sys:String>
-    <sys:String x:Key="FeatureHiddenDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Очистка от невидимых Unicode-символов и ИИ-разметки</sys:String>
+    <sys:String x:Key="FeatureHiddenDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Очистка от невидимых Unicode-символов и Markdown-разметки</sys:String>
     <sys:String x:Key="FeatureNormalizeTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Умная нормализация</sys:String>
-    <sys:String x:Key="FeatureNormalizeDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Единый вид кавычек, тире и многоточий как на Android</sys:String>
+    <sys:String x:Key="FeatureNormalizeDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Прямые кавычки, обычные дефисы и единый вид многоточий</sys:String>
     <sys:String x:Key="FeatureWordsTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Точный подсчёт слов</sys:String>
     <sys:String x:Key="FeatureWordsDesc" xmlns:sys="clr-namespace:System;assembly=mscorlib">Поддержка кириллицы и составных слов через дефис</sys:String>
     <sys:String x:Key="FeatureSpacesTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">Контроль пробелов</sys:String>
@@ -259,4 +259,3 @@
     </Style>
 
 </ResourceDictionary>
-

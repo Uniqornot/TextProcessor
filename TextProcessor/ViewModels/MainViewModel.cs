@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TextProcessor.Services;
@@ -103,7 +104,9 @@ public partial class MainViewModel : ObservableObject
             return;
 
         var value = OutputText;
-        var ok = await RunOnStaThreadAsync(() => TrySetClipboardText(value));
+        var owner = Application.Current?.MainWindow is Window window
+            ? new WindowInteropHelper(window).EnsureHandle() : IntPtr.Zero;
+        var ok = await RunOnStaThreadAsync(() => ClipboardWriter.TrySetText(value, owner));
         if (!ok)
         {
             MessageBox.Show(
@@ -120,7 +123,7 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     private static Task<T> RunOnStaThreadAsync<T>(Func<T> action)
     {
-        var tcs = new TaskCompletionSource<T>();
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
         {
             try { tcs.SetResult(action()); }
@@ -138,7 +141,6 @@ public partial class MainViewModel : ObservableObject
     // захвате буфера (OpenClipboard), поэтому это надёжнее OLE-обёртки WPF,
     // когда буфер удерживает другой процесс (менеджер буфера обмена).
     private const uint CfUnicodeText = 13;
-    private const uint GmemMoveable = 0x0002;
     private const int ClipboardOpenAttempts = 50;
     private const int ClipboardOpenDelayMs = 40;
 
@@ -149,28 +151,16 @@ public partial class MainViewModel : ObservableObject
     private static extern bool CloseClipboard();
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool EmptyClipboard();
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
-
-    [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetClipboardData(uint uFormat);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool IsClipboardFormatAvailable(uint format);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr GlobalLock(IntPtr hMem);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool GlobalUnlock(IntPtr hMem);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GlobalFree(IntPtr hMem);
 
     private static bool TryOpenClipboard()
     {
@@ -182,55 +172,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         return false;
-    }
-
-    private static bool TrySetClipboardText(string value)
-    {
-        value ??= string.Empty;
-
-        if (!TryOpenClipboard())
-            return false;
-
-        try
-        {
-            if (!EmptyClipboard())
-                return false;
-
-            var bytes = (UIntPtr)((value.Length + 1) * 2);
-            var hGlobal = GlobalAlloc(GmemMoveable, bytes);
-            if (hGlobal == IntPtr.Zero)
-                return false;
-
-            var target = GlobalLock(hGlobal);
-            if (target == IntPtr.Zero)
-            {
-                GlobalFree(hGlobal);
-                return false;
-            }
-
-            try
-            {
-                if (value.Length > 0)
-                    Marshal.Copy(value.ToCharArray(), 0, target, value.Length);
-                Marshal.WriteInt16(target, value.Length * 2, 0); // завершающий null
-            }
-            finally
-            {
-                GlobalUnlock(hGlobal);
-            }
-
-            if (SetClipboardData(CfUnicodeText, hGlobal) == IntPtr.Zero)
-            {
-                GlobalFree(hGlobal); // система не приняла память — освобождаем сами
-                return false;
-            }
-
-            return true; // при успехе памятью владеет система
-        }
-        finally
-        {
-            CloseClipboard();
-        }
     }
 
     private static (bool Success, string Text) TryGetClipboardText()

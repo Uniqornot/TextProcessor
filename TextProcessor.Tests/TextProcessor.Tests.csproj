@@ -17,6 +17,7 @@
   <!-- Тестируем сервис напрямую по исходнику: он не зависит от WPF. -->
   <ItemGroup>
     <Compile Include="..\TextProcessor\Services\TextProcessingService.cs" Link="TextProcessingService.cs" />
+    <Compile Include="..\TextProcessor\Services\ClipboardWriter.cs" Link="ClipboardWriter.cs" />
   </ItemGroup>
 
 </Project>

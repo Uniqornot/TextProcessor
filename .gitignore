@@ -10,3 +10,6 @@ TextProcessor.Tests/bin/
 TextProcessor.Tests/obj/
 _t/
 _val/
+
+TextProcessor.WpfSmokeTests/bin/
+TextProcessor.WpfSmokeTests/obj/

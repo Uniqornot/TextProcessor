@@ -16,7 +16,6 @@
            Codepage="1251">
 
     <MajorUpgrade AllowDowngrades="no"
-                  AllowSameVersionUpgrades="yes"
                   Schedule="afterInstallInitialize"
                   DowngradeErrorMessage="Уже установлена более новая версия." />
 
