@@ -1,4 +1,4 @@
-# Build MSI installer for TextProcessor (with version bump + upgrade support)
+﻿# Build MSI installer for TextProcessor (with version bump + upgrade support)
 # Requires: .NET 8 SDK, WiX (dotnet tool install --global wix)
 # Run from TextProcessor folder: .\build-msi.ps1
 #
@@ -17,7 +17,7 @@ $installerDir = Join-Path $repoRoot "TextProcessor.Installer"
 $versionFile = Join-Path $installerDir "VERSION"
 $publishDir = Join-Path $installerDir "publish"
 $msiOutDir = Join-Path $repoRoot "dist"
-$msiPath = Join-Path $msiOutDir "TextProcessorSetup.msi"
+
 
 function Get-NextVersion([string]$current) {
     $v = [version]$current
@@ -32,6 +32,9 @@ if ($Version) {
 } else {
     $productVersion = "1.0.0.1"
 }
+
+$msiPath = Join-Path $msiOutDir "TextProcessorSetup-$productVersion.msi"
+if (Test-Path $msiPath) { throw "Installer already exists: $msiPath" }
 
 Set-Content -Path $versionFile -Value $productVersion -NoNewline -Encoding utf8
 
@@ -79,7 +82,7 @@ if (-not $builtMsi) {
     exit 1
 }
 
-Copy-Item -Force $builtMsi.FullName $msiPath
+Copy-Item $builtMsi.FullName $msiPath
 $sizeMb = [math]::Round((Get-Item $msiPath).Length / 1MB, 1)
 
 Write-Host ""

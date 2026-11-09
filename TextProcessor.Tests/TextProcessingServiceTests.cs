@@ -61,13 +61,13 @@ public class TextProcessingServiceTests
     }
 
     [Fact]
-    public void RemoveHiddenChars_LetterLabelColon_UsesHyphenNotEmDash()
+    public void RemoveHiddenChars_LetterLabelColon_IsPreserved()
     {
         var input = "Введение: краткий обзор темы.";
         var result = TextProcessingService.RemoveHiddenChars(input);
 
         Assert.DoesNotContain(EmDash, result);
-        Assert.Contains(" - ", result);
+        Assert.Equal(input, result);
     }
 
     [Fact]
@@ -268,4 +268,3 @@ public class TextProcessingServiceTests
         Assert.Equal(once, twice);
     }
 }
-

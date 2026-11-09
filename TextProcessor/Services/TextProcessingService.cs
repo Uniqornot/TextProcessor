@@ -25,161 +25,62 @@ public static class TextProcessingService
         @"(\r?\n\s*){3,}",
         RegexOptions.Compiled);
 
-    private static readonly Regex ThreePlusNewlinesRegex = new(
-        @"\n{3,}",
-        RegexOptions.Compiled);
-
-    // Диапазоны BMP + суррогатные пары (U+1F300–U+1FAFF) без \p{Extended_Pictographic}
-    private static readonly Regex EmojiRegex = new(
-        @"[\u2700-\u27BF\u2600-\u26FF\uFE0F]|[\uD83C-\uD83E][\uDC00-\uDFFF]",
-        RegexOptions.Compiled);
-
-    private static readonly Regex FormatCharsRegex = new(
-        @"\p{Cf}",
-        RegexOptions.Compiled);
-
-    private static readonly Regex UnicodeSpacesRegex = new(
-        @"[\u2000-\u200A]",
-        RegexOptions.Compiled);
-
-    private static readonly Regex HorizontalRuleRegex = new(
-        @"(?m)^\s*[-*_]{3,}\s*$",
-        RegexOptions.Compiled);
-
-    private static readonly Regex MarkdownHeaderStripRegex = new(
-        @"(?m)^#{1,6}\s+",
-        RegexOptions.Compiled);
-
     private static readonly Regex MarkdownBlockquoteRegex = new(
         @"(?m)^[ \t]*>[ \t]+",
         RegexOptions.Compiled);
 
-    private static readonly Regex MarkdownBoldRegex = new(
-        @"\*\*(.+?)\*\*",
-        RegexOptions.Singleline | RegexOptions.Compiled);
-
-    private static readonly Regex MarkdownUnderlineRegex = new(
-        @"__(.+?)__",
-        RegexOptions.Singleline | RegexOptions.Compiled);
-
-    private static readonly Regex MarkdownItalicStarRegex = new(
-        @"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)",
-        RegexOptions.Singleline | RegexOptions.Compiled);
-
-    private static readonly Regex MarkdownItalicUnderscoreRegex = new(
-        @"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)",
-        RegexOptions.Singleline | RegexOptions.Compiled);
-
-    private static readonly Regex BulletListRegex = new(
-        @"(?m)^[\-\*•]\s+",
-        RegexOptions.Compiled);
-
-    private static readonly Regex NumberedListRegex = new(
-        @"(?m)^\s*\d+[.)]\s+",
-        RegexOptions.Compiled);
-
-    private static readonly Regex AiColonRegex = new(
-        @"(?m)^([\p{L}][\p{L}\s]{0,40}):\s+(?=\S)",
-        RegexOptions.Compiled);
-
     private static readonly Regex EllipsisRegex = new(
-        @"\.{3,}",
+        @"\.{3,}", RegexOptions.Compiled);
+
+    // Explicit typography allowlist: preserve mathematical minus and ASCII options.
+    private static readonly Regex TypographyDashRegex = new(
+        @"[ \t]*[\u2012-\u2015\u2E3A\u2E3B\uFE31\uFE32\uFE58][ \t]*",
         RegexOptions.Compiled);
 
-    private static readonly Regex DashGluedRegex = new(
-        @"([^\s\-])([\u2013\u2014])([^\s\-])",
-        RegexOptions.Compiled);
-
-    private static readonly Regex DashWithSpacesRegex = new(
-        @"[ \t]*[\u2013\u2014][ \t]*",
-        RegexOptions.Compiled);
-
-    private static readonly Regex MultiHyphenRegex = new(
-        @"[ \t]*-{2,}[ \t]*",
-        RegexOptions.Compiled);
-
-    private static readonly Regex SpacedHyphenRegex = new(
-        @"(?<=\s)-(?=\s)",
-        RegexOptions.Compiled);
-
-    private static readonly Regex SpacedEmDashRegex = new(
-        @"\s—\s",
-        RegexOptions.Compiled);
-
-    /// <summary>
-    /// Только невидимые Unicode-символы — без Markdown, эмодзи и правил ИИ.
-    /// Используется внутри fullClean.
-    /// </summary>
-    private static string StripInvisibleChars(string input)
-    {
-        var result = input;
-        result = result.Replace("\uFEFF", string.Empty);
-        result = result.Replace("\u200B", " ");
-        result = result.Replace("\u200C", " ");
-        result = result.Replace("\u200D", " ");
-        result = result.Replace("\u2060", string.Empty);
-        result = result.Replace("\u00AD", string.Empty);
-        result = result.Replace('\u00A0', ' ');
-        result = result.Replace('\u202F', ' ');
-        result = UnicodeSpacesRegex.Replace(result, " ");
-        result = FormatCharsRegex.Replace(result, string.Empty);
-        return result;
-    }
-
-    /// <summary>
-    /// Удаление скрытых символов, Markdown-разметки и эмодзи.
-    /// </summary>
+    /// <summary>Удаление скрытых символов и Markdown-разметки с сохранением содержания.</summary>
     public static string RemoveHiddenChars(string input)
     {
         if (string.IsNullOrEmpty(input))
             return string.Empty;
 
-        var result = input;
+        var result = NormalizeLineEndings(input);
 
         // 1. Невидимые Unicode-символы
         result = result.Replace("\uFEFF", string.Empty);
         result = result.Replace("\u200B", " ");
-        result = result.Replace("\u200C", " ");
-        result = result.Replace("\u200D", " ");
         result = result.Replace("\u2060", string.Empty);
         result = result.Replace("\u00AD", string.Empty);
         result = result.Replace("\u00A0", " ");
         result = result.Replace("\u202F", " ");
         result = Regex.Replace(result, @"[\u2000-\u200A]", " ");
-        result = Regex.Replace(result, @"\p{Cf}", string.Empty);
+        result = Regex.Replace(result, @"[\p{Cf}-[\u200C\u200D]]", string.Empty);
 
         // 2. Горизонтальные разделители Markdown (---, ***, ___)
-        result = Regex.Replace(result, @"(?m)^\s*[-*_]{3,}\s*$", string.Empty);
+        result = Regex.Replace(result, @"(?m)^[ \t]*[-*_]{3,}[ \t]*$", string.Empty);
 
         // 3. Заголовки Markdown (# ## ### ...), в т.ч. с ведущими пробелами
-        result = Regex.Replace(result, @"(?m)^\s*#{1,6}\s+", string.Empty);
+        result = Regex.Replace(result, @"(?m)^[ \t]*#{1,6}[ \t]+", string.Empty);
 
         // 4. Цитаты Markdown (> текст)
         result = MarkdownBlockquoteRegex.Replace(result, string.Empty);
 
-        // 5. Нумерованные списки (1. или 1) в начале строки)
-        result = Regex.Replace(result, @"(?m)^\s*\d+[.)]\s+", string.Empty);
+        // Нумерация списков сохраняется как часть содержания.
 
         // 6. Маркеры списков (- * • ...)
-        result = Regex.Replace(result, @"(?m)^\s*[-*•▪◦‣]\s+", string.Empty);
+        result = Regex.Replace(result, @"(?m)^[ \t]*[-*•▪◦‣][ \t]+", string.Empty);
 
         // 7. Жирный: **text** и __text__
         result = Regex.Replace(result, @"\*\*(.+?)\*\*", "$1", RegexOptions.Singleline);
-        result = Regex.Replace(result, @"__(.+?)__", "$1", RegexOptions.Singleline);
+        result = Regex.Replace(result, @"(?<![\w/])__([^\r\n]+?)__(?![\w/])", "$1");
 
         // 8. Курсив: *text* и _text_
-        result = Regex.Replace(result, @"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", "$1", RegexOptions.Singleline);
-        result = Regex.Replace(result, @"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", "$1", RegexOptions.Singleline);
+        result = Regex.Replace(result, @"(?<![\w*])\*(?!\*)([^\r\n]+?)(?<!\*)\*(?![\w*])", "$1", RegexOptions.Singleline);
+        result = Regex.Replace(result, @"(?<![\w/])_(?!_)([^\r\n]+?)(?<!_)_(?![\w/])", "$1", RegexOptions.Singleline);
 
         // 9. Escape-слэши Markdown (\* \_ \- ...)
         result = Regex.Replace(result, @"\\([*_\-.!#\[\]()`>+])", "$1");
 
-        // 10. ИИ-паттерн «Метка: текст» в начале строки (только буквы в метке, без цифр)
-        result = Regex.Replace(result, @"(?m)^([\p{L}][\p{L}\s]{0,40}):\s+(?=\S)", "$1 - ");
-
-        // 11. Удаление эмодзи
-        result = Regex.Replace(result, @"[\u2700-\u27BF\u2600-\u26FF\u2300-\u23FF\u2B00-\u2BFF\uFE0F]", string.Empty);
-        result = Regex.Replace(result, @"[\uD83C-\uDBFF][\uDC00-\uDFFF]", string.Empty);
+        // Preserve colons, emoji and supplementary Unicode (letters, music, math).
 
         // 12. Нормализация пробелов после удалений
         result = string.Join("\n",
@@ -259,12 +160,7 @@ public static class TextProcessingService
         result = DenormalizeQuotes(result);
         result = EllipsisRegex.Replace(result, "…");
 
-        // Преобразуем тире, не захватывая \r/\n и не склеивая строки.
-        result = DashWithSpacesRegex.Replace(result, " - ");
-        result = MultiHyphenRegex.Replace(result, " - ");
-        result = MultipleSpacesRegex.Replace(result, " ");
-
-        result = result.Replace('`', '\'').Replace('´', '\'');
+        result = DeNormalizeDashes(result);
 
         return result.Trim();
     }
@@ -280,42 +176,23 @@ public static class TextProcessingService
         var result = input;
         // Основные двойные типографские кавычки: русские «ёлочки»,
         // английские “лапки”, немецкие „лапки“ и одинарные угловые.
-        foreach (var quote in new[] { '«', '»', '\u201C', '\u201D', '\u201E', '\u201F', '‹', '›', '〝', '〞', '＂' })
+        foreach (var quote in new[] { '«', '»', '\u201C', '\u201D', '\u201E', '\u201F', '‹', '›', '〝', '〞', '〟', '＂', '「', '」', '『', '』', '❝', '❞' })
             result = result.Replace(quote, '"');
 
-        result = result.Replace('\u2018', '\'');
-        result = result.Replace('\u2019', '\'');
-        result = result.Replace('\u201A', '\'');
-        result = result.Replace('\u201B', '\'');
+        // Apostrophes inside words stay apostrophes; standalone single quotes are quotation marks.
+        result = Regex.Replace(result, @"[‘’‚‛]", match =>
+            match.Index > 0 && match.Index + 1 < result.Length &&
+            char.IsLetterOrDigit(result[match.Index - 1]) &&
+            char.IsLetterOrDigit(result[match.Index + 1]) ? "'" : "\"");
         return result;
     }
 
-    private static readonly Regex EmDashSpacesRegex = new(
-        @"[ \t]*\u2014[ \t]*",
-        RegexOptions.Compiled);
-
-    private static readonly Regex EnDashSpacesRegex = new(
-        @"[ \t]*\u2013[ \t]*",
-        RegexOptions.Compiled);
-
-    /// <summary>
-    /// Обратная нормализация тире: em/en-dash и прочие варианты → дефис-минус.
-    /// </summary>
+    /// <summary>Приведение типографских тире к ASCII-дефису.</summary>
     public static string DeNormalizeDashes(string input)
     {
         if (string.IsNullOrEmpty(input))
             return string.Empty;
-
-        var result = input;
-
-        result = EmDashSpacesRegex.Replace(result, " - ");
-        result = EnDashSpacesRegex.Replace(result, " - ");
-        result = result.Replace("\u2015", "-");
-        result = result.Replace("\u2012", "-");
-        result = result.Replace("--", "-");
-        result = MultipleSpacesRegex.Replace(result, " ");
-
-        return result.Trim();
+        return TypographyDashRegex.Replace(input, " - ").Trim();
     }
 
     /// <summary>
@@ -327,10 +204,21 @@ public static class TextProcessingService
         if (string.IsNullOrEmpty(input))
             return string.Empty;
 
-        var result = RemoveHiddenChars(input);
+        // URLs are opaque content: punctuation and Markdown rules must not rewrite them.
+        var urls = new List<string>();
+        var prefix = "URL" + Guid.NewGuid().ToString("N") + "X";
+        var protectedInput = Regex.Replace(input, @"(?:https?://|www\.)[^\s<>""«»“”]+", match =>
+        {
+            urls.Add(match.Value);
+            return prefix + (urls.Count - 1) + "Z";
+        });
+        var result = RemoveHiddenChars(protectedInput);
         result = FixParagraphs(result);
         result = SmartNormalize(result);
-        return RemoveExtraSpaces(result);
+        result = RemoveExtraSpaces(result);
+        for (var i = 0; i < urls.Count; i++)
+            result = result.Replace(prefix + i + "Z", urls[i]);
+        return result;
     }
 
     /// <summary>
@@ -368,13 +256,4 @@ public static class TextProcessingService
     private static string NormalizeLineEndings(string text) =>
         text.Replace("\r\n", "\n").Replace('\r', '\n');
 
-    private static string CollapseSpacesInLines(string text)
-    {
-        var lines = NormalizeLineEndings(text).Split('\n');
-        for (var i = 0; i < lines.Length; i++)
-            lines[i] = MultipleSpacesRegex.Replace(lines[i], " ");
-
-        return string.Join('\n', lines);
-    }
 }
-
